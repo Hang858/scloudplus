@@ -3,49 +3,44 @@
 #include "aes.h"
 #include <string.h>
 #include "config.h"
+#include "matrix.h"
+#include "matrix_op.h"
 // This code is based on the implementation of FrodoKEM
 void scloudplus_mul_add_as_e(const uint8_t *seedA, const uint16_t *S,
 							 const uint16_t *E, uint16_t *B)
 {
 	memcpy(B, E, 2 * scloudplus_m * scloudplus_nbar);
 	ALIGN_HEADER(32)
-	uint16_t AROWOUT[4 * scloudplus_n] ALIGN_FOOTER(32) = {0};
+	uint16_t AROWOUT[8 * scloudplus_n] ALIGN_FOOTER(32) = {0};
 	ALIGN_HEADER(32)
-	uint32_t AROWIN[4 * scloudplus_block_rowlen] ALIGN_FOOTER(32) = {0};
+	uint32_t AROWIN[8 * scloudplus_block_rowlen] ALIGN_FOOTER(32) = {0};
 	uint8_t aes_key_schedule[16 * 11];
 	AES128_load_schedule(seedA, aes_key_schedule);
-	for (int i = 0; i < scloudplus_m; i += 4)
+	for (int i = 0; i < scloudplus_m; i += 8)
 	{
 
 		for (int j = 0; j < scloudplus_block_number; j += 1)
 		{
-			AROWIN[scloudplus_block_size * j + 0 * scloudplus_block_rowlen] =
-				i * scloudplus_block_number + j;
-			AROWIN[scloudplus_block_size * j + 1 * scloudplus_block_rowlen] =
-				(i + 1) * scloudplus_block_number + j;
-			AROWIN[scloudplus_block_size * j + 2 * scloudplus_block_rowlen] =
-				(i + 2) * scloudplus_block_number + j;
-			AROWIN[scloudplus_block_size * j + 3 * scloudplus_block_rowlen] =
-				(i + 3) * scloudplus_block_number + j;
+			for(int r = 0; r < 8; r++) {
+                AROWIN[scloudplus_block_size * j + r * scloudplus_block_rowlen] = 
+                    (i + r) * scloudplus_block_number + j;
+            }
 		}
-		AES128_CTR_enc_sch((uint8_t *)AROWIN, 4 * scloudplus_n * sizeof(uint16_t),
+		AES128_CTR_enc_sch((uint8_t *)AROWIN, 8 * scloudplus_n * sizeof(uint16_t),
 						   aes_key_schedule, (uint8_t *)AROWOUT);
+		
+		matrix8x8_t R_A, R_S, R_res, R_acc;
 
-		for (int k = 0; k < scloudplus_nbar; k++)
+		for (int k = 0; k < scloudplus_nbar; k += 8)
 		{
-			uint16_t sum[4] = {0};
-			for (int j = 0; j < scloudplus_n; j++)
-			{
-				uint16_t sp = S[k * scloudplus_n + j];
-				sum[0] += AROWOUT[0 * scloudplus_n + j] * sp;
-				sum[1] += AROWOUT[1 * scloudplus_n + j] * sp;
-				sum[2] += AROWOUT[2 * scloudplus_n + j] * sp;
-				sum[3] += AROWOUT[3 * scloudplus_n + j] * sp;
+			OP_clear_8x8(&R_acc);
+			for (int j = 0; j < scloudplus_n; j += 8) {
+				OP_load_8x8_safe(&R_A, AROWOUT, 0, j, 8, scloudplus_n);
+				OP_load_transposed_8x8_safe(&R_S, S, k, j, scloudplus_nbar, scloudplus_n);
+				OP_matrix_mul_8x8(R_res.val, R_A.val, R_S.val, 0);
+                OP_add_8x8(&R_acc, &R_res);
 			}
-			B[(i + 0) * scloudplus_nbar + k] += sum[0];
-			B[(i + 1) * scloudplus_nbar + k] += sum[1];
-			B[(i + 2) * scloudplus_nbar + k] += sum[2];
-			B[(i + 3) * scloudplus_nbar + k] += sum[3];
+			OP_store_accumulate_8x8_safe(B, &R_acc, i, k, scloudplus_m, scloudplus_nbar);
 		}
 	}
 	AES128_free_schedule(aes_key_schedule);
@@ -76,24 +71,17 @@ void scloudplus_mul_add_sa_e(const uint8_t *seedA, const uint16_t *S,
 		}
 		AES128_CTR_enc_sch((uint8_t *)AROWIN, 8 * scloudplus_n * sizeof(uint16_t),
 						   aes_key_schedule, (uint8_t *)AROWOUT);
-
-		for (int j = 0; j < scloudplus_mbar; j++)
+		matrix8x8_t R_S, R_A, R_res, R_acc;
+		for (int j = 0; j < scloudplus_mbar; j += 8)
 		{
-			uint16_t sum = 0;
-			uint16_t sp[8];
-			for (int p = 0; p < 8; p++)
-			{
-				sp[p] = S[j * scloudplus_m + i + p];
-			}
-			for (int q = 0; q < scloudplus_n; q++)
-			{
-				sum = E[j * scloudplus_n + q];
-				for (int p = 0; p < 8; p++)
-				{
-					sum += sp[p] * AROWOUT[p * scloudplus_n + q];
-				}
-				E[j * scloudplus_n + q] = sum;
-			}
+			OP_clear_8x8(&R_acc);
+			for (int c = 0; c < scloudplus_n; c += 8)
+            {
+                OP_load_8x8_safe(&R_S, S, j, i, scloudplus_mbar, scloudplus_m);
+                OP_load_8x8_safe(&R_A, AROWOUT, 0, c, 8, scloudplus_n);
+                OP_matrix_mul_8x8(R_res.val, R_S.val, R_A.val, 0);
+                OP_store_accumulate_8x8_safe(E, &R_res, j, c, scloudplus_mbar, scloudplus_n);
+            }
 		}
 	}
 	memcpy((unsigned char *)C, (unsigned char *)E,

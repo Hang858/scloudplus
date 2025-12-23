@@ -1,7 +1,7 @@
 #include "random.h"
 #include <stdio.h>
 #include "config.h"
-#ifdef USE_OPENSSL
+#if USE_OPENSSL
 #include <openssl/rand.h>
 int randombytes(
 	unsigned char *random_array,

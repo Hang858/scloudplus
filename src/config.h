@@ -2,7 +2,7 @@
 #define _SCLOUDPLUS_CONFIG_H_
 
 // Define whether to use OpenSSL
-#define USE_OPENSSL 1 // 1 to use OpenSSL, 0 to not use OpenSSL
+#define USE_OPENSSL 0 // 1 to use OpenSSL, 0 to not use OpenSSL
 
 // Define the operating system type
 #define OS_TYPE_LINUX 1
