@@ -25,6 +25,9 @@
 #define ARCH_X64 2
 #define ARCH_ARM 3
 #define ARCH_ARM64 4
+#define ARCH_RISCV 5
+#define ARCH_RISCV32 6
+#define ARCH_RISCV64 7
 
 // Automatically detect the processor architecture
 #if defined(_M_X64) || defined(__x86_64__) || defined(__amd64__)
@@ -35,6 +38,14 @@
 #define TARGET ARCH_ARM
 #elif defined(_M_ARM64) || defined(__aarch64__)
 #define TARGET ARCH_ARM64
+#elif defined(__riscv)
+    #if __riscv_xlen == 64
+        #define TARGET ARCH_RISCV64
+    #elif __riscv_xlen == 32
+        #define TARGET ARCH_RISCV32
+    #else
+        #define TARGET ARCH_RISCV
+    #endif
 #else
 #error "Unknown processor architecture"
 #endif
