@@ -159,7 +159,8 @@ static inline void cbd7(uint64_t in, uint16_t *out)
 }
 
 void scloudplus_sampleeta1(uint8_t *seed, uint16_t *matrixe)
-{
+{	
+	// 9732
 	size_t hashlen =
 		((scloudplus_m * scloudplus_nbar) * (2 * scloudplus_eta1)) >> 3;
 	uint8_t *tmp = (uint8_t *)malloc(hashlen * sizeof(uint8_t));
@@ -476,6 +477,7 @@ void scloudplus_samplepsi(uint8_t *seed, uint16_t *matrixs)
 			k++;
 		}
 	}
+	keccak_state_free(&state);
 }
 
 void scloudplus_samplephi(uint8_t *seed, uint16_t *matrixs)
@@ -510,4 +512,5 @@ void scloudplus_samplephi(uint8_t *seed, uint16_t *matrixs)
 			k++;
 		}
 	}
+	keccak_state_free(&state);
 }

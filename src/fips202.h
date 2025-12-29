@@ -3,7 +3,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
+#include <stdlib.h>
+#include <string.h>
+#include "hardware_driver.h"
 #define SHAKE128_RATE 168
 #define SHAKE256_RATE 136
 #define SHA3_256_RATE 136
@@ -13,6 +15,18 @@ typedef struct
 {
 	uint64_t s[25];
 	unsigned int pos;
+
+	// 新增：用于硬件算子替换
+	uint8_t use_hardware;    // 标记是否用硬件替换（1:用, 0:不用）
+	uint8_t *buffer;         // 分配的缓冲区
+	size_t buf_len;    		 // 当前已存入的数据长度	
+	size_t buf_cap;   	     // 缓冲区容量
+	// 输出缓冲区，用于 squeeze
+	uint8_t *out_buffer;     
+    size_t out_buf_len;      // 已经缓存了多少输出数据
+    size_t out_buf_pos;      // 已经读走了多少
+    size_t out_buf_cap;      // 输出缓存总容量
+
 } keccak_state;
 
 void shake128_init(keccak_state *state);
@@ -38,5 +52,11 @@ void scloudplus_H(unsigned char *output, const unsigned char *input,
 				  unsigned long long inlen);
 void scloudplus_G(unsigned char *output, const unsigned char *input,
 				  unsigned long long inlen);
+
+void sha3_512(uint8_t h[64], const uint8_t *in, size_t inlen);
+void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen);
+
+// 释放内存
+void keccak_state_free(keccak_state *state);
 
 #endif

@@ -502,6 +502,77 @@ static void keccak_squeezeblocks(uint8_t *out, size_t nblocks, uint64_t s[25],
 	}
 }
 
+
+/**
+ * @brief 通用硬件算子初始化方法
+ * 
+ */
+static void common_hw_state_init(keccak_state *state) {
+
+    keccak_init(state->s);
+	state->pos = 0;
+
+	state->use_hardware = 1;
+	state->buf_len = 0;
+	state->buf_cap = INITIAL_HW_BUFFER_SIZE;
+
+	state->out_buf_cap = INITIAL_HW_OUTPUT_SIZE;
+	state->out_buf_len = 0;
+	state->out_buf_pos = 0;
+
+	state->buffer = NULL;
+    state->out_buffer = NULL;
+
+	if (state->buffer == NULL) {
+		state->buffer = (uint8_t*)malloc(state->buf_cap);
+		if (state->buffer == NULL) {
+			state->use_hardware = 0;
+		}
+	}
+	if (state->out_buffer == NULL) {
+		state->out_buffer = (uint8_t*)malloc(state->out_buf_cap);
+		if (state->out_buffer == NULL) {
+			state->use_hardware = 0;
+		}
+	}
+}
+
+static void common_hw_inc_absorb(keccak_state *state, const uint8_t *input, size_t inlen) {
+    if (state->use_hardware) {
+        if (state->buf_len + inlen > state->buf_cap) {
+        size_t new_cap = state->buf_len + inlen + 1024;
+        state->buffer = (uint8_t *)realloc(state->buffer, new_cap);
+        state->buf_cap = new_cap;
+    }
+    
+        memcpy(state->buffer + state->buf_len, input, inlen);
+        state->buf_len += inlen;
+    }
+}
+
+static void common_hw_inc_squeeze(keccak_state *state, uint8_t *output, size_t outlen, uint8_t alg) {
+    size_t needed_total_len = state->out_buf_pos + outlen;
+
+    if (needed_total_len > state->out_buf_len) {
+        if (needed_total_len > state->out_buf_cap) {
+            size_t new_cap = needed_total_len + 1024;
+            state->out_buffer = (uint8_t *)realloc(state->out_buffer, new_cap);
+            state->out_buf_cap = new_cap;
+        }
+
+        OP_hash(alg, OP_MODE_NORMAL, 
+                (int)needed_total_len, 
+                state->buffer, (int)state->buf_len, 
+                state->out_buffer);
+        
+        state->out_buf_len = needed_total_len;
+    }
+    
+    memcpy(output, state->out_buffer + state->out_buf_pos, outlen);
+    state->out_buf_pos += outlen;
+}
+
+
 /*************************************************
  * Name:        shake128_init
  *
@@ -511,8 +582,9 @@ static void keccak_squeezeblocks(uint8_t *out, size_t nblocks, uint64_t s[25],
  **************************************************/
 void shake128_init(keccak_state *state)
 {
-	keccak_init(state->s);
-	state->pos = 0;
+	// keccak_init(state->s);
+	// state->pos = 0;
+    common_hw_state_init(state);
 }
 
 /*************************************************
@@ -527,7 +599,12 @@ void shake128_init(keccak_state *state)
  **************************************************/
 void shake128_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
 {
-	state->pos = keccak_absorb(state->s, state->pos, SHAKE128_RATE, in, inlen);
+	if (state->use_hardware) {
+        common_hw_inc_absorb(state, in, inlen);
+    }
+    else {
+        state->pos = keccak_absorb(state->s, state->pos, SHAKE128_RATE, in, inlen);
+    }
 }
 
 /*************************************************
@@ -539,7 +616,11 @@ void shake128_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
  **************************************************/
 void shake128_finalize(keccak_state *state)
 {
-	keccak_finalize(state->s, state->pos, SHAKE128_RATE, 0x1F);
+	// keccak_finalize(state->s, state->pos, SHAKE128_RATE, 0x1F);
+	// state->pos = SHAKE128_RATE;
+    if (!state->use_hardware) {
+        keccak_finalize(state->s, state->pos, SHAKE128_RATE, 0x1F);
+    }
 	state->pos = SHAKE128_RATE;
 }
 
@@ -556,7 +637,14 @@ void shake128_finalize(keccak_state *state)
  **************************************************/
 void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 {
-	state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE128_RATE);
+	// state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE128_RATE);
+	if (state->use_hardware) {
+		common_hw_inc_squeeze(state, out, outlen, OP_ALG_SHAKE128);
+		return;
+    }
+    else {
+        state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE128_RATE);
+    }
 }
 
 /*************************************************
@@ -573,8 +661,26 @@ void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 void shake128_absorb_once(keccak_state *state, const uint8_t *in,
 						  size_t inlen)
 {
-	keccak_absorb_once(state->s, SHAKE128_RATE, in, inlen, 0x1F);
-	state->pos = SHAKE128_RATE;
+	// keccak_absorb_once(state->s, SHAKE128_RATE, in, inlen, 0x1F);
+	// state->pos = SHAKE128_RATE;
+	if (state->use_hardware) {
+        memset(state, 0, sizeof(keccak_state));
+        shake128_init(state);
+
+        if (inlen > state->buf_cap) {
+            uint8_t *new_buf = (uint8_t *)realloc(state->buffer, inlen);
+            state->buffer = new_buf;
+            state->buf_cap = inlen;
+        }
+        
+        memcpy(state->buffer, in, inlen);
+        state->buf_len = inlen;
+        return;
+    }
+    else {
+        keccak_absorb_once(state->s, SHAKE128_RATE, in, inlen, 0x1F);
+        state->pos = SHAKE128_RATE;
+    }
 }
 
 /*************************************************
@@ -592,7 +698,13 @@ void shake128_absorb_once(keccak_state *state, const uint8_t *in,
  **************************************************/
 void shake128_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
 {
-	keccak_squeezeblocks(out, nblocks, state->s, SHAKE128_RATE);
+	// keccak_squeezeblocks(out, nblocks, state->s, SHAKE128_RATE);
+	if (state->use_hardware) {
+        shake128_squeeze(out, nblocks * SHAKE128_RATE, state);
+    }
+    else {
+        keccak_squeezeblocks(out, nblocks, state->s, SHAKE128_RATE);
+    }
 }
 
 /*************************************************
@@ -604,8 +716,7 @@ void shake128_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
  **************************************************/
 void shake256_init(keccak_state *state)
 {
-	keccak_init(state->s);
-	state->pos = 0;
+	common_hw_state_init(state);
 }
 
 /*************************************************
@@ -620,7 +731,14 @@ void shake256_init(keccak_state *state)
  **************************************************/
 void shake256_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
 {
-	state->pos = keccak_absorb(state->s, state->pos, SHAKE256_RATE, in, inlen);
+	// state->pos = keccak_absorb(state->s, state->pos, SHAKE256_RATE, in, inlen);
+	if (state->use_hardware) {
+		common_hw_inc_absorb(state, in, inlen);
+	}
+	else {
+		state->pos = keccak_absorb(state->s, state->pos, SHAKE256_RATE, in, inlen);
+		return;
+	}
 }
 
 /*************************************************
@@ -632,7 +750,10 @@ void shake256_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
  **************************************************/
 void shake256_finalize(keccak_state *state)
 {
-	keccak_finalize(state->s, state->pos, SHAKE256_RATE, 0x1F);
+	// keccak_finalize(state->s, state->pos, SHAKE256_RATE, 0x1F);
+	if (!state->use_hardware) {
+		keccak_finalize(state->s, state->pos, SHAKE256_RATE, 0x1F);
+	}
 	state->pos = SHAKE256_RATE;
 }
 
@@ -649,7 +770,15 @@ void shake256_finalize(keccak_state *state)
  **************************************************/
 void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 {
-	state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE256_RATE);
+	// state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE256_RATE);
+	if (state->use_hardware) {
+		common_hw_inc_squeeze(state, out, outlen, OP_ALG_SHAKE256);
+		return;
+	}
+	else {
+		state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE256_RATE);
+		return;
+	}
 }
 
 /*************************************************
@@ -666,8 +795,24 @@ void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 void shake256_absorb_once(keccak_state *state, const uint8_t *in,
 						  size_t inlen)
 {
-	keccak_absorb_once(state->s, SHAKE256_RATE, in, inlen, 0x1F);
-	state->pos = SHAKE256_RATE;
+	// keccak_absorb_once(state->s, SHAKE256_RATE, in, inlen, 0x1F);
+	// state->pos = SHAKE256_RATE;
+	if (state->use_hardware) {
+		memset(state, 0, sizeof(keccak_state));
+		shake256_init(state);
+		if (inlen > state->buf_cap) {
+			uint8_t *new_buf = (uint8_t *)realloc(state->buffer, inlen);
+			state->buffer = new_buf;
+			state->buf_cap = inlen;
+		}
+		memcpy(state->buffer, in, inlen);
+        state->buf_len = inlen;
+        return;
+	}
+	else {
+		keccak_absorb_once(state->s, SHAKE256_RATE, in, inlen, 0x1F);
+		state->pos = SHAKE256_RATE;
+	}
 }
 
 /*************************************************
@@ -685,7 +830,13 @@ void shake256_absorb_once(keccak_state *state, const uint8_t *in,
  **************************************************/
 void shake256_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
 {
-	keccak_squeezeblocks(out, nblocks, state->s, SHAKE256_RATE);
+	// keccak_squeezeblocks(out, nblocks, state->s, SHAKE256_RATE);
+	if (state->use_hardware) {
+		shake256_squeeze(out, nblocks * SHAKE256_RATE, state);
+	}
+	else {
+		keccak_squeezeblocks(out, nblocks, state->s, SHAKE256_RATE);
+	}
 }
 
 /*************************************************
@@ -709,6 +860,7 @@ void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 	outlen -= nblocks * SHAKE128_RATE;
 	out += nblocks * SHAKE128_RATE;
 	shake128_squeeze(out, outlen, &state);
+	keccak_state_free(&state);
 }
 
 /*************************************************
@@ -732,6 +884,8 @@ void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 	outlen -= nblocks * SHAKE256_RATE;
 	out += nblocks * SHAKE256_RATE;
 	shake256_squeeze(out, outlen, &state);
+	// 如果使用硬件，则释放内存
+	keccak_state_free(&state);
 }
 
 /*************************************************
@@ -745,13 +899,18 @@ void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
  **************************************************/
 void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
 {
-	unsigned int i;
-	uint64_t s[25];
+	OP_hash(OP_ALG_SHA3_256, OP_MODE_NORMAL, 32, (void *)in, (int)inlen, h);
+	// if (ret == 0) {
+	// 	return;
+	// }            
 
-	keccak_absorb_once(s, SHA3_256_RATE, in, inlen, 0x06);
-	KeccakF1600_StatePermute(s);
-	for (i = 0; i < 4; i++)
-		store64(h + 8 * i, s[i]);
+	// unsigned int i;
+	// uint64_t s[25];
+
+	// keccak_absorb_once(s, SHA3_256_RATE, in, inlen, 0x06);
+	// KeccakF1600_StatePermute(s);
+	// for (i = 0; i < 4; i++)
+	// 	store64(h + 8 * i, s[i]);
 }
 
 /*************************************************
@@ -765,13 +924,14 @@ void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
  **************************************************/
 void sha3_512(uint8_t h[64], const uint8_t *in, size_t inlen)
 {
-	unsigned int i;
-	uint64_t s[25];
-
-	keccak_absorb_once(s, SHA3_512_RATE, in, inlen, 0x06);
-	KeccakF1600_StatePermute(s);
-	for (i = 0; i < 8; i++)
-		store64(h + 8 * i, s[i]);
+	OP_hash(OP_ALG_SHA3_512, OP_MODE_NORMAL, 64, (void *)in, (int)inlen, h);
+	
+	// unsigned int i;
+	// uint64_t s[25];
+	// keccak_absorb_once(s, SHA3_512_RATE, in, inlen, 0x06);
+	// KeccakF1600_StatePermute(s);
+	// for (i = 0; i < 8; i++)
+	// 	store64(h + 8 * i, s[i]);
 }
 
 void scloudplus_F(unsigned char *output, unsigned long long outlen,
@@ -793,4 +953,24 @@ void scloudplus_G(unsigned char *output, const unsigned char *input,
 				  unsigned long long inlen)
 {
 	sha3_512(output, input, inlen);
+}
+
+/**
+ * @brief 释放 Keccak 状态结构体中动态分配的内存
+ * 
+ */
+void keccak_state_free(keccak_state *state) {
+    if (state->use_hardware) {
+        if (state->buffer) {
+            free(state->buffer);
+            state->buffer = NULL;
+        }
+        if (state->out_buffer) {
+            free(state->out_buffer);
+            state->out_buffer = NULL;
+        }
+        state->use_hardware = 0;
+        state->buf_len = 0;
+        state->buf_cap = 0;
+    }
 }

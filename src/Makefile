@@ -9,9 +9,9 @@ CFLAGS = -O3 -march=native -g
 
 LDFLAGS = -lm -lcrypto
 
-SOURCES = aes_c.c encode.c random.c fips202.c sample.c pke.c matrix.c util.c kem.c matrix_op.c
+SOURCES = aes_c.c encode.c random.c fips202.c sample.c pke.c matrix.c util.c kem.c matrix_op.c soft_op_hash.c
         
-HEADERS = aes.h encode.h random.h fips202.h sample.h pke.h matrix.h util.h kem.h ds_benchmark.h config.h matrix_op.h
+HEADERS = aes.h encode.h random.h fips202.h sample.h pke.h matrix.h util.h kem.h ds_benchmark.h config.h matrix_op.h hardware_driver.h
 
 ifeq ($(OS),Windows_NT)
 	UNAME_P := $(PROCESSOR_ARCHITECTURE)
