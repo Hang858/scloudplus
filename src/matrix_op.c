@@ -1,7 +1,7 @@
 #include "matrix_op.h"
 
 int OP_matrix_mul_8x8(uint16_t Z[8][8], const uint16_t X[8][8], const uint16_t Y[8][8], uint16_t q) {
-    // 这里是参考实现，需要替换为硬件指令
+    // 软件实现
     for (int i = 0; i < OP_DIM; i++) {
         for (int j = 0; j < OP_DIM; j++) {
             uint32_t acc = 0;

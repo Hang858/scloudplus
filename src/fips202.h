@@ -17,7 +17,7 @@ typedef struct
 	unsigned int pos;
 
 	// 新增：用于硬件算子替换
-	uint8_t use_hardware;    // 标记是否用硬件替换（1:用, 0:不用）
+#ifdef USE_HARDWARE_HASH
 	uint8_t *buffer;         // 分配的缓冲区
 	size_t buf_len;    		 // 当前已存入的数据长度	
 	size_t buf_cap;   	     // 缓冲区容量
@@ -26,6 +26,7 @@ typedef struct
     size_t out_buf_len;      // 已经缓存了多少输出数据
     size_t out_buf_pos;      // 已经读走了多少
     size_t out_buf_cap;      // 输出缓存总容量
+#endif
 
 } keccak_state;
 

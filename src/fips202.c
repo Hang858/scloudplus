@@ -502,7 +502,7 @@ static void keccak_squeezeblocks(uint8_t *out, size_t nblocks, uint64_t s[25],
 	}
 }
 
-
+#ifdef USE_HARDWARE_HASH
 /**
  * @brief 通用硬件算子初始化方法
  * 
@@ -512,7 +512,6 @@ static void common_hw_state_init(keccak_state *state) {
     keccak_init(state->s);
 	state->pos = 0;
 
-	state->use_hardware = 1;
 	state->buf_len = 0;
 	state->buf_cap = INITIAL_HW_BUFFER_SIZE;
 
@@ -522,37 +521,25 @@ static void common_hw_state_init(keccak_state *state) {
 
 	state->buffer = NULL;
     state->out_buffer = NULL;
+	state->buffer = (uint8_t*)malloc(state->buf_cap);
+	state->out_buffer = (uint8_t*)malloc(state->out_buf_cap);
 
-	if (state->buffer == NULL) {
-		state->buffer = (uint8_t*)malloc(state->buf_cap);
-		if (state->buffer == NULL) {
-			state->use_hardware = 0;
-		}
-	}
-	if (state->out_buffer == NULL) {
-		state->out_buffer = (uint8_t*)malloc(state->out_buf_cap);
-		if (state->out_buffer == NULL) {
-			state->use_hardware = 0;
-		}
-	}
 }
 
 static void common_hw_inc_absorb(keccak_state *state, const uint8_t *input, size_t inlen) {
-    if (state->use_hardware) {
-        if (state->buf_len + inlen > state->buf_cap) {
+	if (state->buffer == NULL) return;
+    if (state->buf_len + inlen > state->buf_cap) {
         size_t new_cap = state->buf_len + inlen + 1024;
         state->buffer = (uint8_t *)realloc(state->buffer, new_cap);
         state->buf_cap = new_cap;
     }
-    
-        memcpy(state->buffer + state->buf_len, input, inlen);
-        state->buf_len += inlen;
-    }
+	memcpy(state->buffer + state->buf_len, input, inlen);
+	state->buf_len += inlen;
 }
 
 static void common_hw_inc_squeeze(keccak_state *state, uint8_t *output, size_t outlen, uint8_t alg) {
+	if (state->out_buffer == NULL) return;
     size_t needed_total_len = state->out_buf_pos + outlen;
-
     if (needed_total_len > state->out_buf_len) {
         if (needed_total_len > state->out_buf_cap) {
             size_t new_cap = needed_total_len + 1024;
@@ -571,7 +558,7 @@ static void common_hw_inc_squeeze(keccak_state *state, uint8_t *output, size_t o
     memcpy(output, state->out_buffer + state->out_buf_pos, outlen);
     state->out_buf_pos += outlen;
 }
-
+#endif
 
 /*************************************************
  * Name:        shake128_init
@@ -580,12 +567,18 @@ static void common_hw_inc_squeeze(keccak_state *state, uint8_t *output, size_t o
  *
  * Arguments:   - keccak_state *state: pointer to (uninitialized) Keccak state
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake128_init(keccak_state *state)
 {
-	// keccak_init(state->s);
-	// state->pos = 0;
     common_hw_state_init(state);
 }
+#else
+void shake128_init(keccak_state *state)
+{
+	keccak_init(state->s);
+	state->pos = 0;
+}
+#endif
 
 /*************************************************
  * Name:        shake128_absorb
@@ -597,16 +590,17 @@ void shake128_init(keccak_state *state)
  *              - const uint8_t *in: pointer to input to be absorbed into s
  *              - size_t inlen: length of input in bytes
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake128_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
 {
-	if (state->use_hardware) {
-        common_hw_inc_absorb(state, in, inlen);
-    }
-    else {
-        state->pos = keccak_absorb(state->s, state->pos, SHAKE128_RATE, in, inlen);
-    }
+    common_hw_inc_absorb(state, in, inlen);
 }
-
+#else
+void shake128_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
+{
+	state->pos = keccak_absorb(state->s, state->pos, SHAKE128_RATE, in, inlen);
+}
+#endif
 /*************************************************
  * Name:        shake128_finalize
  *
@@ -614,16 +608,18 @@ void shake128_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
  *
  * Arguments:   - keccak_state *state: pointer to Keccak state
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake128_finalize(keccak_state *state)
 {
-	// keccak_finalize(state->s, state->pos, SHAKE128_RATE, 0x1F);
-	// state->pos = SHAKE128_RATE;
-    if (!state->use_hardware) {
-        keccak_finalize(state->s, state->pos, SHAKE128_RATE, 0x1F);
-    }
 	state->pos = SHAKE128_RATE;
 }
-
+#else
+void shake128_finalize(keccak_state *state)
+{
+	keccak_finalize(state->s, state->pos, SHAKE128_RATE, 0x1F);
+	state->pos = SHAKE128_RATE;
+}
+#endif
 /*************************************************
  * Name:        shake128_squeeze
  *
@@ -635,18 +631,17 @@ void shake128_finalize(keccak_state *state)
  *output)
  *              - keccak_state *s: pointer to input/output Keccak state
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 {
-	// state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE128_RATE);
-	if (state->use_hardware) {
-		common_hw_inc_squeeze(state, out, outlen, OP_ALG_SHAKE128);
-		return;
-    }
-    else {
-        state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE128_RATE);
-    }
+	common_hw_inc_squeeze(state, out, outlen, OP_ALG_SHAKE128);
 }
-
+#else
+void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
+{
+	state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE128_RATE);
+}
+#endif
 /*************************************************
  * Name:        shake128_absorb_once
  *
@@ -658,31 +653,31 @@ void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
  *              - const uint8_t *in: pointer to input to be absorbed into s
  *              - size_t inlen: length of input in bytes
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake128_absorb_once(keccak_state *state, const uint8_t *in,
 						  size_t inlen)
 {
-	// keccak_absorb_once(state->s, SHAKE128_RATE, in, inlen, 0x1F);
-	// state->pos = SHAKE128_RATE;
-	if (state->use_hardware) {
-        memset(state, 0, sizeof(keccak_state));
-        shake128_init(state);
+	memset(state, 0, sizeof(keccak_state));
+	shake128_init(state);
 
-        if (inlen > state->buf_cap) {
-            uint8_t *new_buf = (uint8_t *)realloc(state->buffer, inlen);
-            state->buffer = new_buf;
-            state->buf_cap = inlen;
-        }
-        
-        memcpy(state->buffer, in, inlen);
-        state->buf_len = inlen;
-        return;
-    }
-    else {
-        keccak_absorb_once(state->s, SHAKE128_RATE, in, inlen, 0x1F);
-        state->pos = SHAKE128_RATE;
-    }
+	if (inlen > state->buf_cap) {
+		uint8_t *new_buf = (uint8_t *)realloc(state->buffer, inlen);
+		state->buffer = new_buf;
+		state->buf_cap = inlen;
+	}
+	
+	memcpy(state->buffer, in, inlen);
+	state->buf_len = inlen;
+	return;
 }
-
+#else
+void shake128_absorb_once(keccak_state *state, const uint8_t *in,
+						  size_t inlen)
+{
+	keccak_absorb_once(state->s, SHAKE128_RATE, in, inlen, 0x1F);
+	state->pos = SHAKE128_RATE;
+}
+#endif
 /*************************************************
  * Name:        shake128_squeezeblocks
  *
@@ -696,16 +691,17 @@ void shake128_absorb_once(keccak_state *state, const uint8_t *in,
  *output)
  *              - keccak_state *s: pointer to input/output Keccak state
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake128_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
 {
-	// keccak_squeezeblocks(out, nblocks, state->s, SHAKE128_RATE);
-	if (state->use_hardware) {
-        shake128_squeeze(out, nblocks * SHAKE128_RATE, state);
-    }
-    else {
-        keccak_squeezeblocks(out, nblocks, state->s, SHAKE128_RATE);
-    }
+	shake128_squeeze(out, nblocks * SHAKE128_RATE, state);
 }
+#else
+void shake128_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
+{
+	keccak_squeezeblocks(out, nblocks, state->s, SHAKE128_RATE);
+}
+#endif
 
 /*************************************************
  * Name:        shake256_init
@@ -714,10 +710,18 @@ void shake128_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
  *
  * Arguments:   - keccak_state *state: pointer to (uninitialized) Keccak state
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake256_init(keccak_state *state)
 {
 	common_hw_state_init(state);
 }
+#else
+void shake256_init(keccak_state *state)
+{
+	keccak_init(state->s);
+	state->pos = 0;
+}
+#endif
 
 /*************************************************
  * Name:        shake256_absorb
@@ -729,17 +733,17 @@ void shake256_init(keccak_state *state)
  *              - const uint8_t *in: pointer to input to be absorbed into s
  *              - size_t inlen: length of input in bytes
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake256_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
 {
-	// state->pos = keccak_absorb(state->s, state->pos, SHAKE256_RATE, in, inlen);
-	if (state->use_hardware) {
-		common_hw_inc_absorb(state, in, inlen);
-	}
-	else {
-		state->pos = keccak_absorb(state->s, state->pos, SHAKE256_RATE, in, inlen);
-		return;
-	}
+	common_hw_inc_absorb(state, in, inlen);
 }
+#else
+void shake256_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
+{
+	state->pos = keccak_absorb(state->s, state->pos, SHAKE256_RATE, in, inlen);
+}
+#endif
 
 /*************************************************
  * Name:        shake256_finalize
@@ -748,14 +752,18 @@ void shake256_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
  *
  * Arguments:   - keccak_state *state: pointer to Keccak state
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake256_finalize(keccak_state *state)
 {
-	// keccak_finalize(state->s, state->pos, SHAKE256_RATE, 0x1F);
-	if (!state->use_hardware) {
-		keccak_finalize(state->s, state->pos, SHAKE256_RATE, 0x1F);
-	}
 	state->pos = SHAKE256_RATE;
 }
+#else
+void shake256_finalize(keccak_state *state)
+{
+	keccak_finalize(state->s, state->pos, SHAKE256_RATE, 0x1F);
+	state->pos = SHAKE256_RATE;
+}
+#endif
 
 /*************************************************
  * Name:        shake256_squeeze
@@ -768,19 +776,17 @@ void shake256_finalize(keccak_state *state)
  *output)
  *              - keccak_state *s: pointer to input/output Keccak state
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 {
-	// state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE256_RATE);
-	if (state->use_hardware) {
-		common_hw_inc_squeeze(state, out, outlen, OP_ALG_SHAKE256);
-		return;
-	}
-	else {
-		state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE256_RATE);
-		return;
-	}
+	common_hw_inc_squeeze(state, out, outlen, OP_ALG_SHAKE256);
 }
-
+#else
+void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
+{
+	state->pos = keccak_squeeze(out, outlen, state->s, state->pos, SHAKE256_RATE);
+}
+#endif
 /*************************************************
  * Name:        shake256_absorb_once
  *
@@ -792,28 +798,29 @@ void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
  *              - const uint8_t *in: pointer to input to be absorbed into s
  *              - size_t inlen: length of input in bytes
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake256_absorb_once(keccak_state *state, const uint8_t *in,
 						  size_t inlen)
 {
-	// keccak_absorb_once(state->s, SHAKE256_RATE, in, inlen, 0x1F);
-	// state->pos = SHAKE256_RATE;
-	if (state->use_hardware) {
-		memset(state, 0, sizeof(keccak_state));
-		shake256_init(state);
-		if (inlen > state->buf_cap) {
-			uint8_t *new_buf = (uint8_t *)realloc(state->buffer, inlen);
-			state->buffer = new_buf;
-			state->buf_cap = inlen;
-		}
-		memcpy(state->buffer, in, inlen);
-        state->buf_len = inlen;
-        return;
+	memset(state, 0, sizeof(keccak_state));
+	shake256_init(state);
+	if (inlen > state->buf_cap) {
+		uint8_t *new_buf = (uint8_t *)realloc(state->buffer, inlen);
+		state->buffer = new_buf;
+		state->buf_cap = inlen;
 	}
-	else {
-		keccak_absorb_once(state->s, SHAKE256_RATE, in, inlen, 0x1F);
-		state->pos = SHAKE256_RATE;
-	}
+	memcpy(state->buffer, in, inlen);
+	state->buf_len = inlen;
+	return;
 }
+#else
+void shake256_absorb_once(keccak_state *state, const uint8_t *in,
+						  size_t inlen)
+{
+	keccak_absorb_once(state->s, SHAKE256_RATE, in, inlen, 0x1F);
+	state->pos = SHAKE256_RATE;
+}
+#endif
 
 /*************************************************
  * Name:        shake256_squeezeblocks
@@ -828,16 +835,17 @@ void shake256_absorb_once(keccak_state *state, const uint8_t *in,
  *output)
  *              - keccak_state *s: pointer to input/output Keccak state
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void shake256_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
 {
-	// keccak_squeezeblocks(out, nblocks, state->s, SHAKE256_RATE);
-	if (state->use_hardware) {
-		shake256_squeeze(out, nblocks * SHAKE256_RATE, state);
-	}
-	else {
-		keccak_squeezeblocks(out, nblocks, state->s, SHAKE256_RATE);
-	}
+	shake256_squeeze(out, nblocks * SHAKE256_RATE, state);
 }
+#else
+void shake256_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
+{
+	keccak_squeezeblocks(out, nblocks, state->s, SHAKE256_RATE);
+}
+#endif
 
 /*************************************************
  * Name:        shake128
@@ -884,7 +892,6 @@ void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 	outlen -= nblocks * SHAKE256_RATE;
 	out += nblocks * SHAKE256_RATE;
 	shake256_squeeze(out, outlen, &state);
-	// 如果使用硬件，则释放内存
 	keccak_state_free(&state);
 }
 
@@ -897,21 +904,23 @@ void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
  *              - const uint8_t *in: pointer to input
  *              - size_t inlen: length of input in bytes
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
 {
 	OP_hash(OP_ALG_SHA3_256, OP_MODE_NORMAL, 32, (void *)in, (int)inlen, h);
-	// if (ret == 0) {
-	// 	return;
-	// }            
-
-	// unsigned int i;
-	// uint64_t s[25];
-
-	// keccak_absorb_once(s, SHA3_256_RATE, in, inlen, 0x06);
-	// KeccakF1600_StatePermute(s);
-	// for (i = 0; i < 4; i++)
-	// 	store64(h + 8 * i, s[i]);
 }
+#else
+void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
+{
+	unsigned int i;
+	uint64_t s[25];
+
+	keccak_absorb_once(s, SHA3_256_RATE, in, inlen, 0x06);
+	KeccakF1600_StatePermute(s);
+	for (i = 0; i < 4; i++)
+		store64(h + 8 * i, s[i]);
+}
+#endif
 
 /*************************************************
  * Name:        sha3_512
@@ -922,18 +931,22 @@ void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
  *              - const uint8_t *in: pointer to input
  *              - size_t inlen: length of input in bytes
  **************************************************/
+#ifdef USE_HARDWARE_HASH
 void sha3_512(uint8_t h[64], const uint8_t *in, size_t inlen)
 {
 	OP_hash(OP_ALG_SHA3_512, OP_MODE_NORMAL, 64, (void *)in, (int)inlen, h);
-	
-	// unsigned int i;
-	// uint64_t s[25];
-	// keccak_absorb_once(s, SHA3_512_RATE, in, inlen, 0x06);
-	// KeccakF1600_StatePermute(s);
-	// for (i = 0; i < 8; i++)
-	// 	store64(h + 8 * i, s[i]);
 }
-
+#else
+void sha3_512(uint8_t h[64], const uint8_t *in, size_t inlen)
+{	
+	unsigned int i;
+	uint64_t s[25];
+	keccak_absorb_once(s, SHA3_512_RATE, in, inlen, 0x06);
+	KeccakF1600_StatePermute(s);
+	for (i = 0; i < 8; i++)
+		store64(h + 8 * i, s[i]);		
+}
+#endif
 void scloudplus_F(unsigned char *output, unsigned long long outlen,
 				  const unsigned char *input, unsigned long long inlen)
 {
@@ -959,18 +972,21 @@ void scloudplus_G(unsigned char *output, const unsigned char *input,
  * @brief 释放 Keccak 状态结构体中动态分配的内存
  * 
  */
+#ifdef USE_HARDWARE_HASH
 void keccak_state_free(keccak_state *state) {
-    if (state->use_hardware) {
-        if (state->buffer) {
-            free(state->buffer);
-            state->buffer = NULL;
+    if (state->buffer) {
+		free(state->buffer);
+		state->buffer = NULL;
         }
-        if (state->out_buffer) {
-            free(state->out_buffer);
-            state->out_buffer = NULL;
-        }
-        state->use_hardware = 0;
-        state->buf_len = 0;
-        state->buf_cap = 0;
-    }
+	if (state->out_buffer) {
+		free(state->out_buffer);
+		state->out_buffer = NULL;
+	}
+	state->buf_len = 0;
+	state->buf_cap = 0;
 }
+#else
+void keccak_state_free(keccak_state *state) {
+	(void)state;
+}
+#endif

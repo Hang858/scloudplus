@@ -11,6 +11,8 @@
 #define OPH_SHA3_256_RATE 136
 #define OPH_SHA3_512_RATE 72
 
+unsigned long long g_oph_calls = 0;
+
 // --- 内部辅助函数 ---
 
 static uint64_t oph_load64(const uint8_t x[8]) {
@@ -275,6 +277,7 @@ static void oph_absorb_once(uint64_t s[25], unsigned int r,
  */
 int OP_hash(uint8_t alg, uint8_t mode, int n, void *input, int input_len, void *output) {
     // 基础参数检查
+    g_oph_calls++;
     if (input == NULL || output == NULL || input_len < 0 || n <= 0) {
         return -1;
     }

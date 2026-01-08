@@ -15,7 +15,7 @@
  * @param output     输出：存储哈希结果的缓冲区指针。
  * @return           0: 成功; -1: 失败。
  */
-
+#define USE_HARDWARE_HASH
 #define OP_ALG_SHA3_256   0
 #define OP_ALG_SHA3_512   1
 #define OP_ALG_SM3      2

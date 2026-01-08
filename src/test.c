@@ -15,6 +15,7 @@
 #elif (scloudplus_l == 256)
 #define SYSTEM_NAME "scloud plus 256"
 #endif
+extern unsigned long long g_oph_calls;
 static int kem_test(const char *named_parameters, int iterations)
 {
 	uint8_t pk[scloudplus_pk];
@@ -97,6 +98,7 @@ int main()
 
 	PRINT_TIMER_HEADER
 	kem_bench(KEM_BENCH_SECONDS);
+	printf("Total OP_hash calls: %llu\n", g_oph_calls);
 exit:
 	return (OK == true) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
