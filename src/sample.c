@@ -1,19 +1,23 @@
 #include "sample.h"
 #include "fips202.h"
 #include "aes.h"
+#include <stdint.h>
 #include <string.h>
 #include "config.h"
-#include "matrix.h"
-#include "matrix_op.h"
+#include "param.h"
+#include "vector_op.h"
 // This code is based on the implementation of FrodoKEM
 void scloudplus_mul_add_as_e(const uint8_t *seedA, const uint16_t *S,
 							 const uint16_t *E, uint16_t *B)
 {
 	memcpy(B, E, 2 * scloudplus_m * scloudplus_nbar);
-	ALIGN_HEADER(32)
-	uint16_t AROWOUT[8 * scloudplus_n] ALIGN_FOOTER(32) = {0};
+	// 直接生成大矩阵 A
+	size_t size_A = (size_t)scloudplus_m * scloudplus_n * sizeof(uint16_t);
+	uint16_t *MatrixA = (uint16_t *)malloc(size_A);
+
 	ALIGN_HEADER(32)
 	uint32_t AROWIN[8 * scloudplus_block_rowlen] ALIGN_FOOTER(32) = {0};
+
 	uint8_t aes_key_schedule[16 * 11];
 	AES128_load_schedule(seedA, aes_key_schedule);
 	for (int i = 0; i < scloudplus_m; i += 8)
@@ -27,31 +31,27 @@ void scloudplus_mul_add_as_e(const uint8_t *seedA, const uint16_t *S,
             }
 		}
 		AES128_CTR_enc_sch((uint8_t *)AROWIN, 8 * scloudplus_n * sizeof(uint16_t),
-						   aes_key_schedule, (uint8_t *)AROWOUT);
-		
-		matrix8x8_t R_A, R_S, R_res, R_acc;
-
-		for (int k = 0; k < scloudplus_nbar; k += 8)
-		{
-			OP_clear_8x8(&R_acc);
-			for (int j = 0; j < scloudplus_n; j += 8) {
-				OP_load_8x8_safe(&R_A, AROWOUT, 0, j, 8, scloudplus_n);
-				OP_load_transposed_8x8_safe(&R_S, S, k, j, scloudplus_nbar, scloudplus_n);
-				OP_matrix_mul_8x8(R_res.val, R_A.val, R_S.val, 0);
-                OP_add_8x8(&R_acc, &R_res);
-			}
-			OP_store_accumulate_8x8_safe(B, &R_acc, i, k, scloudplus_m, scloudplus_nbar);
-		}
+						   aes_key_schedule, (uint8_t *)&MatrixA[i * scloudplus_n]);
 	}
 	AES128_free_schedule(aes_key_schedule);
+
+	// 新增向量算法
+	uint16_t q = (1 << scloudplus_logq);
+	uint16_t res;
+	for (int i = 0; i < scloudplus_m; ++i) {
+		for (int k = 0; k < scloudplus_nbar; ++k) {
+			OP_vector_mul(&res, &MatrixA[i * scloudplus_n], &S[k * scloudplus_n], scloudplus_n, q);
+			B[i * scloudplus_nbar + k] += res;
+		}
+	}
+	free(MatrixA);
 }
 // This code is based on the implementation of FrodoKEM
 void scloudplus_mul_add_sa_e(const uint8_t *seedA, const uint16_t *S,
 							 uint16_t *E, uint16_t *C)
 {
-
-	ALIGN_HEADER(32)
-	uint16_t AROWOUT[8 * scloudplus_n] ALIGN_FOOTER(32) = {0};
+	size_t size_A = (size_t)scloudplus_m * scloudplus_n * sizeof(uint16_t);
+    uint16_t *MatrixA = (uint16_t *)malloc(size_A);
 
 	uint8_t aes_key_schedule[16 * 11];
 	AES128_load_schedule(seedA, aes_key_schedule);
@@ -70,23 +70,32 @@ void scloudplus_mul_add_sa_e(const uint8_t *seedA, const uint16_t *S,
 			}
 		}
 		AES128_CTR_enc_sch((uint8_t *)AROWIN, 8 * scloudplus_n * sizeof(uint16_t),
-						   aes_key_schedule, (uint8_t *)AROWOUT);
-		matrix8x8_t R_S, R_A, R_res, R_acc;
-		for (int j = 0; j < scloudplus_mbar; j += 8)
-		{
-			OP_clear_8x8(&R_acc);
-			for (int c = 0; c < scloudplus_n; c += 8)
-            {
-                OP_load_8x8_safe(&R_S, S, j, i, scloudplus_mbar, scloudplus_m);
-                OP_load_8x8_safe(&R_A, AROWOUT, 0, c, 8, scloudplus_n);
-                OP_matrix_mul_8x8(R_res.val, R_S.val, R_A.val, 0);
-                OP_store_accumulate_8x8_safe(E, &R_res, j, c, scloudplus_mbar, scloudplus_n);
-            }
-		}
+						   aes_key_schedule, (uint8_t *)&MatrixA[i * scloudplus_n]);
 	}
-	memcpy((unsigned char *)C, (unsigned char *)E,
-		   2 * scloudplus_mbar * scloudplus_n);
 	AES128_free_schedule(aes_key_schedule);
+	uint16_t *MatrixA_Trans = (uint16_t *)malloc(size_A);
+	matrix_transpose(MatrixA, MatrixA_Trans, scloudplus_m, scloudplus_n);
+
+	uint16_t q = (1 << scloudplus_logq);
+	uint16_t res;
+	for (int j = 0; j < scloudplus_mbar; j++) 
+    {
+        const uint16_t *row_S = &S[j * scloudplus_m];
+
+        for (int k = 0; k < scloudplus_n; k++)
+        {
+            const uint16_t *row_AT = &MatrixA_Trans[k * scloudplus_m];
+            OP_vector_mul(&res, 
+                          row_S, 
+                          row_AT, 
+                          scloudplus_m, 
+                          q);
+            uint16_t e_val = E[j * scloudplus_n + k];
+            C[j * scloudplus_n + k] = res + e_val;
+        }
+    }
+    free(MatrixA);
+    free(MatrixA_Trans);
 }
 
 static inline uint32_t read3bytestou32(const uint8_t *ptr)
