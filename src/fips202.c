@@ -502,64 +502,6 @@ static void keccak_squeezeblocks(uint8_t *out, size_t nblocks, uint64_t s[25],
 	}
 }
 
-#ifdef USE_HARDWARE_HASH
-/**
- * @brief 通用硬件算子初始化方法
- * 
- */
-static void common_hw_state_init(keccak_state *state) {
-
-    keccak_init(state->s);
-	state->pos = 0;
-
-	state->buf_len = 0;
-	state->buf_cap = INITIAL_HW_BUFFER_SIZE;
-
-	state->out_buf_cap = INITIAL_HW_OUTPUT_SIZE;
-	state->out_buf_len = 0;
-	state->out_buf_pos = 0;
-
-	state->buffer = NULL;
-    state->out_buffer = NULL;
-	state->buffer = (uint8_t*)malloc(state->buf_cap);
-	state->out_buffer = (uint8_t*)malloc(state->out_buf_cap);
-
-}
-
-static void common_hw_inc_absorb(keccak_state *state, const uint8_t *input, size_t inlen) {
-	if (state->buffer == NULL) return;
-    if (state->buf_len + inlen > state->buf_cap) {
-        size_t new_cap = state->buf_len + inlen + 1024;
-        state->buffer = (uint8_t *)realloc(state->buffer, new_cap);
-        state->buf_cap = new_cap;
-    }
-	memcpy(state->buffer + state->buf_len, input, inlen);
-	state->buf_len += inlen;
-}
-
-static void common_hw_inc_squeeze(keccak_state *state, uint8_t *output, size_t outlen, uint8_t alg) {
-	if (state->out_buffer == NULL) return;
-    size_t needed_total_len = state->out_buf_pos + outlen;
-    if (needed_total_len > state->out_buf_len) {
-        if (needed_total_len > state->out_buf_cap) {
-            size_t new_cap = needed_total_len + 1024;
-            state->out_buffer = (uint8_t *)realloc(state->out_buffer, new_cap);
-            state->out_buf_cap = new_cap;
-        }
-
-        OP_hash(alg, OP_MODE_NORMAL, 
-                (int)needed_total_len, 
-                state->buffer, (int)state->buf_len, 
-                state->out_buffer);
-        
-        state->out_buf_len = needed_total_len;
-    }
-    
-    memcpy(output, state->out_buffer + state->out_buf_pos, outlen);
-    state->out_buf_pos += outlen;
-}
-#endif
-
 /*************************************************
  * Name:        shake128_init
  *
@@ -570,7 +512,7 @@ static void common_hw_inc_squeeze(keccak_state *state, uint8_t *output, size_t o
 #ifdef USE_HARDWARE_HASH
 void shake128_init(keccak_state *state)
 {
-    common_hw_state_init(state);
+    OP_hash_init(OP_ALG_SHAKE128, state->s, 200+8);
 }
 #else
 void shake128_init(keccak_state *state)
@@ -593,7 +535,7 @@ void shake128_init(keccak_state *state)
 #ifdef USE_HARDWARE_HASH
 void shake128_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
 {
-    common_hw_inc_absorb(state, in, inlen);
+    OP_hash_absorb(OP_ALG_SHAKE128, (void*)state->s, 200+8, (void*)in, inlen);
 }
 #else
 void shake128_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
@@ -634,7 +576,7 @@ void shake128_finalize(keccak_state *state)
 #ifdef USE_HARDWARE_HASH
 void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 {
-	common_hw_inc_squeeze(state, out, outlen, OP_ALG_SHAKE128);
+	OP_hash_squeeze(OP_ALG_SHAKE128, (void*)state->s, 200+8, (void*)out, outlen);
 }
 #else
 void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
@@ -657,18 +599,8 @@ void shake128_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 void shake128_absorb_once(keccak_state *state, const uint8_t *in,
 						  size_t inlen)
 {
-	memset(state, 0, sizeof(keccak_state));
-	shake128_init(state);
-
-	if (inlen > state->buf_cap) {
-		uint8_t *new_buf = (uint8_t *)realloc(state->buffer, inlen);
-		state->buffer = new_buf;
-		state->buf_cap = inlen;
-	}
-	
-	memcpy(state->buffer, in, inlen);
-	state->buf_len = inlen;
-	return;
+	OP_hash_init(OP_ALG_SHAKE128, state->s, 200+8);
+	OP_hash_absorb(OP_ALG_SHAKE128, (void*)state->s, 200+8, (void*)in, inlen);
 }
 #else
 void shake128_absorb_once(keccak_state *state, const uint8_t *in,
@@ -713,7 +645,7 @@ void shake128_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
 #ifdef USE_HARDWARE_HASH
 void shake256_init(keccak_state *state)
 {
-	common_hw_state_init(state);
+	OP_hash_init(OP_ALG_SHAKE256, state->s, 200+8);
 }
 #else
 void shake256_init(keccak_state *state)
@@ -736,7 +668,7 @@ void shake256_init(keccak_state *state)
 #ifdef USE_HARDWARE_HASH
 void shake256_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
 {
-	common_hw_inc_absorb(state, in, inlen);
+	OP_hash_absorb(OP_ALG_SHAKE256, (void*)state->s, 200+8, (void*)in, inlen);
 }
 #else
 void shake256_absorb(keccak_state *state, const uint8_t *in, size_t inlen)
@@ -779,7 +711,7 @@ void shake256_finalize(keccak_state *state)
 #ifdef USE_HARDWARE_HASH
 void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 {
-	common_hw_inc_squeeze(state, out, outlen, OP_ALG_SHAKE256);
+	OP_hash_squeeze(OP_ALG_SHAKE256, (void*)state->s, 200+8, (void*)out, outlen);
 }
 #else
 void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
@@ -802,15 +734,8 @@ void shake256_squeeze(uint8_t *out, size_t outlen, keccak_state *state)
 void shake256_absorb_once(keccak_state *state, const uint8_t *in,
 						  size_t inlen)
 {
-	memset(state, 0, sizeof(keccak_state));
-	shake256_init(state);
-	if (inlen > state->buf_cap) {
-		uint8_t *new_buf = (uint8_t *)realloc(state->buffer, inlen);
-		state->buffer = new_buf;
-		state->buf_cap = inlen;
-	}
-	memcpy(state->buffer, in, inlen);
-	state->buf_len = inlen;
+	OP_hash_init(OP_ALG_SHAKE256, state->s, 200+8);
+	OP_hash_absorb(OP_ALG_SHAKE256, (void*)state->s, 200+8, (void*)in, inlen);
 	return;
 }
 #else
@@ -859,16 +784,7 @@ void shake256_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
  **************************************************/
 void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 {
-	size_t nblocks;
-	keccak_state state;
-
-	shake128_absorb_once(&state, in, inlen);
-	nblocks = outlen / SHAKE128_RATE;
-	shake128_squeezeblocks(out, nblocks, &state);
-	outlen -= nblocks * SHAKE128_RATE;
-	out += nblocks * SHAKE128_RATE;
-	shake128_squeeze(out, outlen, &state);
-	keccak_state_free(&state);
+	OP_hash(OP_ALG_SHAKE128, OP_MODE_NORMAL, (int)outlen, (void *)in, (int)inlen, 0, out);
 }
 
 /*************************************************
@@ -883,16 +799,7 @@ void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
  **************************************************/
 void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 {
-	size_t nblocks;
-	keccak_state state;
-
-	shake256_absorb_once(&state, in, inlen);
-	nblocks = outlen / SHAKE256_RATE;
-	shake256_squeezeblocks(out, nblocks, &state);
-	outlen -= nblocks * SHAKE256_RATE;
-	out += nblocks * SHAKE256_RATE;
-	shake256_squeeze(out, outlen, &state);
-	keccak_state_free(&state);
+	OP_hash(OP_ALG_SHAKE256, OP_MODE_NORMAL, (int)outlen, (void *)in, (int)inlen, 0, out);
 }
 
 /*************************************************
@@ -907,7 +814,7 @@ void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 #ifdef USE_HARDWARE_HASH
 void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
 {
-	OP_hash(OP_ALG_SHA3_256, OP_MODE_NORMAL, 32, (void *)in, (int)inlen, h);
+	OP_hash(OP_ALG_SHA3_256, OP_MODE_NORMAL, 32, (void *)in, (int)inlen, 0, h);
 }
 #else
 void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
@@ -934,7 +841,7 @@ void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
 #ifdef USE_HARDWARE_HASH
 void sha3_512(uint8_t h[64], const uint8_t *in, size_t inlen)
 {
-	OP_hash(OP_ALG_SHA3_512, OP_MODE_NORMAL, 64, (void *)in, (int)inlen, h);
+	OP_hash(OP_ALG_SHA3_512, OP_MODE_NORMAL, 64, (void *)in, (int)inlen, 0, h);
 }
 #else
 void sha3_512(uint8_t h[64], const uint8_t *in, size_t inlen)
@@ -967,26 +874,3 @@ void scloudplus_G(unsigned char *output, const unsigned char *input,
 {
 	sha3_512(output, input, inlen);
 }
-
-/**
- * @brief 释放 Keccak 状态结构体中动态分配的内存
- * 
- */
-#ifdef USE_HARDWARE_HASH
-void keccak_state_free(keccak_state *state) {
-    if (state->buffer) {
-		free(state->buffer);
-		state->buffer = NULL;
-        }
-	if (state->out_buffer) {
-		free(state->out_buffer);
-		state->out_buffer = NULL;
-	}
-	state->buf_len = 0;
-	state->buf_cap = 0;
-}
-#else
-void keccak_state_free(keccak_state *state) {
-	(void)state;
-}
-#endif

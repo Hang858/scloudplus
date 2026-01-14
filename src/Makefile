@@ -9,9 +9,9 @@ CFLAGS = -O3 -march=native -g
 
 LDFLAGS = -lm -lcrypto
 
-SOURCES = aes_c.c encode.c random.c fips202.c sample.c pke.c matrix.c util.c kem.c vector_op.c soft_op_hash.c
+SOURCES = aes_c.c encode.c random.c fips202.c sample.c pke.c matrix.c util.c kem.c PQCDevKitAPI/op_hash.c PQCDevKitAPI/sm3.c
         
-HEADERS = aes.h encode.h random.h fips202.h sample.h pke.h matrix.h util.h kem.h ds_benchmark.h config.h vector_op.h hardware_driver.h
+HEADERS = aes.h encode.h random.h fips202.h sample.h pke.h matrix.h util.h kem.h ds_benchmark.h config.h PQCDevKitAPI/operator_interface.h
 
 ifeq ($(OS),Windows_NT)
 	UNAME_P := $(PROCESSOR_ARCHITECTURE)

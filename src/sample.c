@@ -1,57 +1,62 @@
 #include "sample.h"
 #include "fips202.h"
 #include "aes.h"
-#include <stdint.h>
 #include <string.h>
 #include "config.h"
-#include "param.h"
-#include "vector_op.h"
 // This code is based on the implementation of FrodoKEM
 void scloudplus_mul_add_as_e(const uint8_t *seedA, const uint16_t *S,
 							 const uint16_t *E, uint16_t *B)
 {
 	memcpy(B, E, 2 * scloudplus_m * scloudplus_nbar);
-	// 直接生成大矩阵 A
-	size_t size_A = (size_t)scloudplus_m * scloudplus_n * sizeof(uint16_t);
-	uint16_t *MatrixA = (uint16_t *)malloc(size_A);
-
 	ALIGN_HEADER(32)
-	uint32_t AROWIN[8 * scloudplus_block_rowlen] ALIGN_FOOTER(32) = {0};
-
+	uint16_t AROWOUT[4 * scloudplus_n] ALIGN_FOOTER(32) = {0};
+	ALIGN_HEADER(32)
+	uint32_t AROWIN[4 * scloudplus_block_rowlen] ALIGN_FOOTER(32) = {0};
 	uint8_t aes_key_schedule[16 * 11];
 	AES128_load_schedule(seedA, aes_key_schedule);
-	for (int i = 0; i < scloudplus_m; i += 8)
+	for (int i = 0; i < scloudplus_m; i += 4)
 	{
 
 		for (int j = 0; j < scloudplus_block_number; j += 1)
 		{
-			for(int r = 0; r < 8; r++) {
-                AROWIN[scloudplus_block_size * j + r * scloudplus_block_rowlen] = 
-                    (i + r) * scloudplus_block_number + j;
-            }
+			AROWIN[scloudplus_block_size * j + 0 * scloudplus_block_rowlen] =
+				i * scloudplus_block_number + j;
+			AROWIN[scloudplus_block_size * j + 1 * scloudplus_block_rowlen] =
+				(i + 1) * scloudplus_block_number + j;
+			AROWIN[scloudplus_block_size * j + 2 * scloudplus_block_rowlen] =
+				(i + 2) * scloudplus_block_number + j;
+			AROWIN[scloudplus_block_size * j + 3 * scloudplus_block_rowlen] =
+				(i + 3) * scloudplus_block_number + j;
 		}
-		AES128_CTR_enc_sch((uint8_t *)AROWIN, 8 * scloudplus_n * sizeof(uint16_t),
-						   aes_key_schedule, (uint8_t *)&MatrixA[i * scloudplus_n]);
+		AES128_CTR_enc_sch((uint8_t *)AROWIN, 4 * scloudplus_n * sizeof(uint16_t),
+						   aes_key_schedule, (uint8_t *)AROWOUT);
+
+		for (int k = 0; k < scloudplus_nbar; k++)
+		{
+			uint16_t sum[4] = {0};
+			for (int j = 0; j < scloudplus_n; j++)
+			{
+				uint16_t sp = S[k * scloudplus_n + j];
+				sum[0] += AROWOUT[0 * scloudplus_n + j] * sp;
+				sum[1] += AROWOUT[1 * scloudplus_n + j] * sp;
+				sum[2] += AROWOUT[2 * scloudplus_n + j] * sp;
+				sum[3] += AROWOUT[3 * scloudplus_n + j] * sp;
+			}
+			B[(i + 0) * scloudplus_nbar + k] += sum[0];
+			B[(i + 1) * scloudplus_nbar + k] += sum[1];
+			B[(i + 2) * scloudplus_nbar + k] += sum[2];
+			B[(i + 3) * scloudplus_nbar + k] += sum[3];
+		}
 	}
 	AES128_free_schedule(aes_key_schedule);
-
-	// 新增向量算法
-	uint16_t q = (1 << scloudplus_logq);
-	uint16_t res;
-	for (int i = 0; i < scloudplus_m; ++i) {
-		for (int k = 0; k < scloudplus_nbar; ++k) {
-			OP_vector_mul(&res, &MatrixA[i * scloudplus_n], &S[k * scloudplus_n], scloudplus_n, q);
-			B[i * scloudplus_nbar + k] += res;
-		}
-	}
-	free(MatrixA);
 }
 // This code is based on the implementation of FrodoKEM
 void scloudplus_mul_add_sa_e(const uint8_t *seedA, const uint16_t *S,
 							 uint16_t *E, uint16_t *C)
 {
-	size_t size_A = (size_t)scloudplus_m * scloudplus_n * sizeof(uint16_t);
-    uint16_t *MatrixA = (uint16_t *)malloc(size_A);
+
+	ALIGN_HEADER(32)
+	uint16_t AROWOUT[8 * scloudplus_n] ALIGN_FOOTER(32) = {0};
 
 	uint8_t aes_key_schedule[16 * 11];
 	AES128_load_schedule(seedA, aes_key_schedule);
@@ -70,32 +75,30 @@ void scloudplus_mul_add_sa_e(const uint8_t *seedA, const uint16_t *S,
 			}
 		}
 		AES128_CTR_enc_sch((uint8_t *)AROWIN, 8 * scloudplus_n * sizeof(uint16_t),
-						   aes_key_schedule, (uint8_t *)&MatrixA[i * scloudplus_n]);
+						   aes_key_schedule, (uint8_t *)AROWOUT);
+
+		for (int j = 0; j < scloudplus_mbar; j++)
+		{
+			uint16_t sum = 0;
+			uint16_t sp[8];
+			for (int p = 0; p < 8; p++)
+			{
+				sp[p] = S[j * scloudplus_m + i + p];
+			}
+			for (int q = 0; q < scloudplus_n; q++)
+			{
+				sum = E[j * scloudplus_n + q];
+				for (int p = 0; p < 8; p++)
+				{
+					sum += sp[p] * AROWOUT[p * scloudplus_n + q];
+				}
+				E[j * scloudplus_n + q] = sum;
+			}
+		}
 	}
+	memcpy((unsigned char *)C, (unsigned char *)E,
+		   2 * scloudplus_mbar * scloudplus_n);
 	AES128_free_schedule(aes_key_schedule);
-	uint16_t *MatrixA_Trans = (uint16_t *)malloc(size_A);
-	matrix_transpose(MatrixA, MatrixA_Trans, scloudplus_m, scloudplus_n);
-
-	uint16_t q = (1 << scloudplus_logq);
-	uint16_t res;
-	for (int j = 0; j < scloudplus_mbar; j++) 
-    {
-        const uint16_t *row_S = &S[j * scloudplus_m];
-
-        for (int k = 0; k < scloudplus_n; k++)
-        {
-            const uint16_t *row_AT = &MatrixA_Trans[k * scloudplus_m];
-            OP_vector_mul(&res, 
-                          row_S, 
-                          row_AT, 
-                          scloudplus_m, 
-                          q);
-            uint16_t e_val = E[j * scloudplus_n + k];
-            C[j * scloudplus_n + k] = res + e_val;
-        }
-    }
-    free(MatrixA);
-    free(MatrixA_Trans);
 }
 
 static inline uint32_t read3bytestou32(const uint8_t *ptr)
@@ -168,8 +171,7 @@ static inline void cbd7(uint64_t in, uint16_t *out)
 }
 
 void scloudplus_sampleeta1(uint8_t *seed, uint16_t *matrixe)
-{	
-	// 9732
+{
 	size_t hashlen =
 		((scloudplus_m * scloudplus_nbar) * (2 * scloudplus_eta1)) >> 3;
 	uint8_t *tmp = (uint8_t *)malloc(hashlen * sizeof(uint8_t));
@@ -486,7 +488,6 @@ void scloudplus_samplepsi(uint8_t *seed, uint16_t *matrixs)
 			k++;
 		}
 	}
-	keccak_state_free(&state);
 }
 
 void scloudplus_samplephi(uint8_t *seed, uint16_t *matrixs)
@@ -521,5 +522,4 @@ void scloudplus_samplephi(uint8_t *seed, uint16_t *matrixs)
 			k++;
 		}
 	}
-	keccak_state_free(&state);
 }

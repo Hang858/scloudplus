@@ -1,0 +1,803 @@
+desc: --stacks=yes
+cmd: ./scloudplus128_aes
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=426339211
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41576
+heap_tree=peak
+n7: 45296 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 9600 0x116D42: scloudplus_pkeenc (pke.c:38)
+  n2: 9600 0x117C20: scloud_kemencaps (kem.c:25)
+   n1: 9600 0x109E58: kem_test.constprop.0 (test.c:41)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D4F: scloudplus_pkeenc (pke.c:40)
+  n2: 9600 0x117C20: scloud_kemencaps (kem.c:25)
+   n1: 9600 0x109E58: kem_test.constprop.0 (test.c:41)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D76: scloudplus_pkeenc (pke.c:46)
+  n2: 9600 0x117C20: scloud_kemencaps (kem.c:25)
+   n1: 9600 0x109E58: kem_test.constprop.0 (test.c:41)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D90: scloudplus_pkeenc (pke.c:50)
+  n2: 9600 0x117C20: scloud_kemencaps (kem.c:25)
+   n1: 9600 0x109E58: kem_test.constprop.0 (test.c:41)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 5488 0x117BDD: scloud_kemencaps (kem.c:20)
+  n1: 5488 0x109E58: kem_test.constprop.0 (test.c:41)
+   n0: 5488 0x109219: main (test.c:92)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 1024 0x49D21B4: _IO_file_doallocate (filedoalloc.c:101)
+  n1: 1024 0x49E2523: _IO_doallocbuf (genops.c:347)
+   n1: 1024 0x49DFF8F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+    n1: 1024 0x49E0AAE: _IO_new_file_xsputn (fileops.c:1244)
+     n1: 1024 0x49E0AAE: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+      n1: 1024 0x49D4C5C: puts (ioputs.c:40)
+       n1: 1024 0x109E0F: printf (stdio2.h:86)
+        n1: 1024 0x109E0F: kem_test.constprop.0 (test.c:29)
+         n0: 1024 0x109219: main (test.c:92)
+ n0: 384 in 13 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=2
+#-----------
+time=997432534
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=1471309381
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=1876379522
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=2631638447
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=6
+#-----------
+time=3099976119
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=7
+#-----------
+time=3825761877
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=4323019872
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=9
+#-----------
+time=4969457797
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=5665619334
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=6113151059
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=6938566105
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=13
+#-----------
+time=7598900177
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=14
+#-----------
+time=8011609747
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=8589397807
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=16
+#-----------
+time=9414811697
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=10240228094
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=10904958065
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=detailed
+n5: 29824 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 9600 0x116C1C: scloudplus_pkekeygen (pke.c:13)
+  n2: 9600 0x117B32: scloud_kemkeygen (kem.c:13)
+   n1: 9600 0x109E4A: kem_test.constprop.0 (test.c:40)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 9600 0x116C29: scloudplus_pkekeygen (pke.c:15)
+  n2: 9600 0x117B32: scloud_kemkeygen (kem.c:13)
+   n1: 9600 0x109E4A: kem_test.constprop.0 (test.c:40)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 9600 0x116C36: scloudplus_pkekeygen (pke.c:17)
+  n2: 9600 0x117B32: scloud_kemkeygen (kem.c:13)
+   n1: 9600 0x109E4A: kem_test.constprop.0 (test.c:40)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 1024 0x49D21B4: _IO_file_doallocate (filedoalloc.c:101)
+  n1: 1024 0x49E2523: _IO_doallocbuf (genops.c:347)
+   n1: 1024 0x49DFF8F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+    n1: 1024 0x49E0AAE: _IO_new_file_xsputn (fileops.c:1244)
+     n1: 1024 0x49E0AAE: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+      n1: 1024 0x49D4C5C: puts (ioputs.c:40)
+       n1: 1024 0x109E0F: printf (stdio2.h:86)
+        n1: 1024 0x109E0F: kem_test.constprop.0 (test.c:29)
+         n0: 1024 0x109219: main (test.c:92)
+ n0: 0 in 15 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=19
+#-----------
+time=11303794258
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=20
+#-----------
+time=11968524043
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=21
+#-----------
+time=12500306136
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=13032090261
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=23
+#-----------
+time=13829767242
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=24
+#-----------
+time=14228610275
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41576
+heap_tree=empty
+#-----------
+snapshot=25
+#-----------
+time=14760393202
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=26
+#-----------
+time=15292178836
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=27
+#-----------
+time=15691016381
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=28
+#-----------
+time=16355744935
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=29
+#-----------
+time=16887527166
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=30
+#-----------
+time=17529315364
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=31
+#-----------
+time=17957175425
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=detailed
+n5: 29824 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 9600 0x116C1C: scloudplus_pkekeygen (pke.c:13)
+  n2: 9600 0x117B32: scloud_kemkeygen (kem.c:13)
+   n1: 9600 0x109E4A: kem_test.constprop.0 (test.c:40)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 9600 0x116C29: scloudplus_pkekeygen (pke.c:15)
+  n2: 9600 0x117B32: scloud_kemkeygen (kem.c:13)
+   n1: 9600 0x109E4A: kem_test.constprop.0 (test.c:40)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 9600 0x116C36: scloudplus_pkekeygen (pke.c:17)
+  n2: 9600 0x117B32: scloud_kemkeygen (kem.c:13)
+   n1: 9600 0x109E4A: kem_test.constprop.0 (test.c:40)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 1024 0x49D21B4: _IO_file_doallocate (filedoalloc.c:101)
+  n1: 1024 0x49E2523: _IO_doallocbuf (genops.c:347)
+   n1: 1024 0x49DFF8F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+    n1: 1024 0x49E0AAE: _IO_new_file_xsputn (fileops.c:1244)
+     n1: 1024 0x49E0AAE: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+      n1: 1024 0x49D4C5C: puts (ioputs.c:40)
+       n1: 1024 0x109E0F: printf (stdio2.h:86)
+        n1: 1024 0x109E0F: kem_test.constprop.0 (test.c:29)
+         n0: 1024 0x109219: main (test.c:92)
+ n0: 0 in 15 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=32
+#-----------
+time=18598963298
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=19026822070
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=34
+#-----------
+time=19668610325
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=20096468650
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=detailed
+n7: 45296 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 9600 0x116D42: scloudplus_pkeenc (pke.c:38)
+  n2: 9600 0x117D30: scloud_kemdecaps (kem.c:38)
+   n1: 9600 0x109E66: kem_test.constprop.0 (test.c:42)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D4F: scloudplus_pkeenc (pke.c:40)
+  n2: 9600 0x117D30: scloud_kemdecaps (kem.c:38)
+   n1: 9600 0x109E66: kem_test.constprop.0 (test.c:42)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D76: scloudplus_pkeenc (pke.c:46)
+  n2: 9600 0x117D30: scloud_kemdecaps (kem.c:38)
+   n1: 9600 0x109E66: kem_test.constprop.0 (test.c:42)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D90: scloudplus_pkeenc (pke.c:50)
+  n2: 9600 0x117D30: scloud_kemdecaps (kem.c:38)
+   n1: 9600 0x109E66: kem_test.constprop.0 (test.c:42)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 5488 0x117CD8: scloud_kemdecaps (kem.c:34)
+  n1: 5488 0x109E66: kem_test.constprop.0 (test.c:42)
+   n0: 5488 0x109219: main (test.c:92)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 1024 0x49D21B4: _IO_file_doallocate (filedoalloc.c:101)
+  n1: 1024 0x49E2523: _IO_doallocbuf (genops.c:347)
+   n1: 1024 0x49DFF8F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+    n1: 1024 0x49E0AAE: _IO_new_file_xsputn (fileops.c:1244)
+     n1: 1024 0x49E0AAE: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+      n1: 1024 0x49D4C5C: puts (ioputs.c:40)
+       n1: 1024 0x109E0F: printf (stdio2.h:86)
+        n1: 1024 0x109E0F: kem_test.constprop.0 (test.c:29)
+         n0: 1024 0x109219: main (test.c:92)
+ n0: 384 in 13 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=36
+#-----------
+time=20738260994
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31808
+heap_tree=empty
+#-----------
+snapshot=37
+#-----------
+time=21380048422
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=21807907445
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=39
+#-----------
+time=22449696678
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=22877557814
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=41
+#-----------
+time=23305417043
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=23733276646
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=24161136720
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=44
+#-----------
+time=24802926040
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=45
+#-----------
+time=25444714657
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=25872576947
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31816
+heap_tree=empty
+#-----------
+snapshot=47
+#-----------
+time=26300436866
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=48
+#-----------
+time=26942225732
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=49
+#-----------
+time=27584013963
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=27982850987
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=51
+#-----------
+time=28381689457
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=52
+#-----------
+time=28780525823
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=53
+#-----------
+time=29179362608
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=54
+#-----------
+time=29578200707
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=detailed
+n7: 45296 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 9600 0x116D42: scloudplus_pkeenc (pke.c:38)
+  n2: 9600 0x117D30: scloud_kemdecaps (kem.c:38)
+   n1: 9600 0x109E66: kem_test.constprop.0 (test.c:42)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D4F: scloudplus_pkeenc (pke.c:40)
+  n2: 9600 0x117D30: scloud_kemdecaps (kem.c:38)
+   n1: 9600 0x109E66: kem_test.constprop.0 (test.c:42)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D76: scloudplus_pkeenc (pke.c:46)
+  n2: 9600 0x117D30: scloud_kemdecaps (kem.c:38)
+   n1: 9600 0x109E66: kem_test.constprop.0 (test.c:42)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D90: scloudplus_pkeenc (pke.c:50)
+  n2: 9600 0x117D30: scloud_kemdecaps (kem.c:38)
+   n1: 9600 0x109E66: kem_test.constprop.0 (test.c:42)
+    n0: 9600 0x109219: main (test.c:92)
+   n0: 0 in 1 place, below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 5488 0x117CD8: scloud_kemdecaps (kem.c:34)
+  n1: 5488 0x109E66: kem_test.constprop.0 (test.c:42)
+   n0: 5488 0x109219: main (test.c:92)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 1024 0x49D21B4: _IO_file_doallocate (filedoalloc.c:101)
+  n1: 1024 0x49E2523: _IO_doallocbuf (genops.c:347)
+   n1: 1024 0x49DFF8F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+    n1: 1024 0x49E0AAE: _IO_new_file_xsputn (fileops.c:1244)
+     n1: 1024 0x49E0AAE: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+      n1: 1024 0x49D4C5C: puts (ioputs.c:40)
+       n1: 1024 0x109E0F: printf (stdio2.h:86)
+        n1: 1024 0x109E0F: kem_test.constprop.0 (test.c:29)
+         n0: 1024 0x109219: main (test.c:92)
+ n0: 384 in 13 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=55
+#-----------
+time=29977039088
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=56
+#-----------
+time=30375876395
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=57
+#-----------
+time=30774713538
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=58
+#-----------
+time=31173551001
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=59
+#-----------
+time=31572389404
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41664
+heap_tree=empty
+#-----------
+snapshot=60
+#-----------
+time=31971225702
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=31904
+heap_tree=empty
+#-----------
+snapshot=61
+#-----------
+time=32370062681
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=32064
+heap_tree=empty
+#-----------
+snapshot=62
+#-----------
+time=32768900153
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=32064
+heap_tree=empty
+#-----------
+snapshot=63
+#-----------
+time=33167738186
+mem_heap_B=29824
+mem_heap_extra_B=32
+mem_stacks_B=32064
+heap_tree=empty
+#-----------
+snapshot=64
+#-----------
+time=33566575437
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=detailed
+n7: 45296 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n2: 9600 0x116D42: scloudplus_pkeenc (pke.c:38)
+  n2: 9600 0x117C20: scloud_kemencaps (kem.c:25)
+   n1: 9600 0x10963A: kem_bench.constprop.0 (test.c:75)
+    n0: 9600 0x109274: main (test.c:99)
+   n0: 0 in 2 places, all below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D4F: scloudplus_pkeenc (pke.c:40)
+  n2: 9600 0x117C20: scloud_kemencaps (kem.c:25)
+   n1: 9600 0x10963A: kem_bench.constprop.0 (test.c:75)
+    n0: 9600 0x109274: main (test.c:99)
+   n0: 0 in 2 places, all below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D76: scloudplus_pkeenc (pke.c:46)
+  n2: 9600 0x117C20: scloud_kemencaps (kem.c:25)
+   n1: 9600 0x10963A: kem_bench.constprop.0 (test.c:75)
+    n0: 9600 0x109274: main (test.c:99)
+   n0: 0 in 2 places, all below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 9600 0x116D90: scloudplus_pkeenc (pke.c:50)
+  n2: 9600 0x117C20: scloud_kemencaps (kem.c:25)
+   n1: 9600 0x10963A: kem_bench.constprop.0 (test.c:75)
+    n0: 9600 0x109274: main (test.c:99)
+   n0: 0 in 2 places, all below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n2: 5488 0x117BDD: scloud_kemencaps (kem.c:20)
+  n1: 5488 0x10963A: kem_bench.constprop.0 (test.c:75)
+   n0: 5488 0x109274: main (test.c:99)
+  n0: 0 in 2 places, all below massif's threshold (1.00%)
+ n1: 1024 0x49D21B4: _IO_file_doallocate (filedoalloc.c:101)
+  n1: 1024 0x49E2523: _IO_doallocbuf (genops.c:347)
+   n1: 1024 0x49DFF8F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:745)
+    n1: 1024 0x49E0AAE: _IO_new_file_xsputn (fileops.c:1244)
+     n1: 1024 0x49E0AAE: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1197)
+      n1: 1024 0x49D4C5C: puts (ioputs.c:40)
+       n1: 1024 0x109E0F: printf (stdio2.h:86)
+        n1: 1024 0x109E0F: kem_test.constprop.0 (test.c:29)
+         n0: 1024 0x109219: main (test.c:92)
+ n0: 384 in 13 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=65
+#-----------
+time=33965411881
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
+#-----------
+snapshot=66
+#-----------
+time=34364249057
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
+#-----------
+snapshot=67
+#-----------
+time=34763086216
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
+#-----------
+snapshot=68
+#-----------
+time=35161922422
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
+#-----------
+snapshot=69
+#-----------
+time=35560759160
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
+#-----------
+snapshot=70
+#-----------
+time=35959597548
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
+#-----------
+snapshot=71
+#-----------
+time=36358434093
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
+#-----------
+snapshot=72
+#-----------
+time=36757270685
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
+#-----------
+snapshot=73
+#-----------
+time=37156108601
+mem_heap_B=45296
+mem_heap_extra_B=72
+mem_stacks_B=41824
+heap_tree=empty
