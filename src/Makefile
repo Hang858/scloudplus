@@ -9,7 +9,7 @@ CFLAGS = -O3 -march=native -g
 
 LDFLAGS = -lm -lcrypto
 
-SOURCES = aes_c.c encode.c random.c fips202.c sample.c pke.c matrix.c util.c kem.c PQCDevKitAPI/op_hash.c PQCDevKitAPI/sm3.c
+SOURCES = aes_c.c encode.c random.c fips202.c sample.c pke.c matrix.c util.c kem.c PQCDevKitAPI/soft/op_hash.c PQCDevKitAPI/soft/sm3.c
         
 HEADERS = aes.h encode.h random.h fips202.h sample.h pke.h matrix.h util.h kem.h ds_benchmark.h config.h PQCDevKitAPI/operator_interface.h
 
